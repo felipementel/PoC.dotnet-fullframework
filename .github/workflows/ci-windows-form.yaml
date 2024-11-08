@@ -1,0 +1,39 @@
+# .github/workflows/dotnet-windows-build.yml
+name: Build .NET Framework Windows Forms App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install NuGet dependencies
+        run: nuget restore WindowsFormsApp/WindowsFormsApp/WindowsFormsApp.csproj
+
+      - name: Locate MSBuild
+        id: locate-msbuild
+        run: |
+          echo "::set-output name=path::$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)"
+
+      - name: Build solution
+        run: |
+          $msbuild = '${{ steps.locate-msbuild.outputs.path }}'
+          & "$msbuild" 'WindowsFormsApp/WindowsFormsApp.sln' /p:Configuration=Release /p:platform="Any CPU"
+
+      - name: Run tests
+        run: |
+          vstest.console.exe **/*.Tests.dll --logger:trx
+        continue-on-error: true
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WindowsFormsApp
+          path: '**/bin/Release/*'
