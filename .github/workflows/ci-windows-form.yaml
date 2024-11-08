@@ -18,12 +18,17 @@ jobs:
         run: nuget restore WindowsFormsApp/WindowsFormsApp/WindowsFormsApp.csproj
         
       - name: Set up MSBuild path
-        id: msbuild_path  # Adicionamos um id ao passo
+        id: msbuild_path  # Adiciona um ID ao passo
         run: |
-          echo "path=$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)" >> $GITHUB_OUTPUT
+          msbuild_path=$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)
+          echo "path=$msbuild_path" >> $GITHUB_OUTPUT
+
+      - name: Debug MSBuild path
+        run: echo "MSBuild path is ${{ steps.msbuild_path.outputs.path }}"
 
       - name: Use MSBuild
-        run: ${{ steps.msbuild_path.outputs.path }} 'WindowsFormsApp/WindowsFormsApp.sln' /p:Configuration="Release" /p:platform="Any CPU"
+        run: |
+          "${{ steps.msbuild_path.outputs.path }}" "WindowsFormsApp/WindowsFormsApp.sln" /p:Configuration="Release" /p:Platform="Any CPU"
 
       - name: Run tests
         run: |
