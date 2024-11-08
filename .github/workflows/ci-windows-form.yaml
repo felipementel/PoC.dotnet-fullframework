@@ -17,15 +17,11 @@ jobs:
       - name: Install NuGet dependencies
         run: nuget restore WindowsFormsApp/WindowsFormsApp/WindowsFormsApp.csproj
 
-      - name: Locate MSBuild
-        id: locate-msbuild
-        run: |
-          echo "::set-output name=path::$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)"
+      - name: Set up MSBuild path
+        run: echo "path=$(vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe)" >> $GITHUB_OUTPUT
 
-      - name: Build solution
-        run: |
-          $msbuild = '${{ steps.locate-msbuild.outputs.path }}'
-          & "$msbuild" 'WindowsFormsApp/WindowsFormsApp.sln' /p:Configuration=Release /p:platform="Any CPU"
+      - name: Use MSBuild
+        run: ${{ steps.build.outputs.path }} 'WindowsFormsApp/WindowsFormsApp.sln' /p:Configuration=Release /p:platform="Any CPU"
 
       - name: Run tests
         run: |
